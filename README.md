@@ -7,7 +7,7 @@ The repository can be downloaded with
 ```
 git clone https://github.com/ececcotti/astro-pysEC
 ```
-The following Python packages are required if you want run all the scripts:
+The following Python packages are required to run all the scripts:
 -  [Astropy](https://docs.astropy.org/en/stable/index.html) 4.1 or later
 -  [Matplotlib](https://matplotlib.org/) 2.0 or later
 -  [NumPy](https://numpy.org/) 1.16 or later
