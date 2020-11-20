@@ -1,4 +1,4 @@
-# pysec
+# astro-pysEC
 
 A collection of Python scripts useful for astronomical purposes. The required Python version is specified in the scrpt description.
 
