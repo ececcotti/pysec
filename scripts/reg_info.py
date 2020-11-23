@@ -3,12 +3,14 @@ import os,sys
 import regions
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.coordinates import SkyCoord
 
 o = optparse.OptionParser(usage='%prog [options] *.fits')
 o.add_option('-r', '--reg', dest='reg', type="str", help='region file (allowed extensions: reg, crtf, fits)')
+o.add_option('-p', '--plot', dest='plot', action="store_true", help='simple plot of the selected region')
 opts,args = o.parse_args(sys.argv[1:])
 
 for fitsname in args:
@@ -28,11 +30,18 @@ for fitsname in args:
 
     all_regions = read_reg(opts.reg)
     reg_sum = []; reg_rms = []; reg_mean = []; reg_ra = []; reg_dec = []; reg_npoints = []
+    idx = 0
     for region in all_regions:
         reg_pxl = region.to_pixel(wcs=wcs)
         mask = reg_pxl.to_mask()
         data_reg = mask.cutout(data)
-
+        if opts.plot:
+            plt.imshow(data_reg, cmap='viridis', origin='lower')
+            plt.colorbar(label=fits_units)
+            plt.title('Region ' + str(idx))
+            plt.axis('off')
+            plt.show()
+            idx += 1
         reg_ra = np.append(reg_ra, str(SkyCoord(region.center).ra.to('hourangle')))
         reg_dec = np.append(reg_dec, str(SkyCoord(region.center).dec))  
         reg_npoints = np.append(reg_npoints, data_reg.size)
