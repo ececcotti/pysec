@@ -26,4 +26,4 @@ If you do not need all the scripts, you can check what are the required packages
 
 -  `plot_fits.py`: it generates plots of a FITS image using WCS coordinates. The output image can be saved in PDF or PNG format. Other plotting options can be listed with `python plot_fits.py -h` (Python 3.8 or later).
 
--  `reg_info.py`: it gets useful information (e.g. sum, mean and rms) from one or more regions of an image. Multiple FITS images are accepted, but only one region file. However, it can be a collection of more than one region; in this case, individual and global information will be given. DS9 (REG), CASA (CRTF) and FITS region file formats are all allowed (Python 3.8 or later).
+-  `reg_info.py`: it gets useful information (e.g. sum, mean and rms) from one or more regions of an image. Multiple FITS images are accepted, but only one region file. However, it can be a collection of more than one region; in this case, individual and global information will be given. DS9 (REG), CASA (CRTF) and FITS region file formats are all allowed. Other options (e.g. plotting) can be listed with `python reg_info.py -h` (Python 3.8 or later).
