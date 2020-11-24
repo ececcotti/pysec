@@ -8,6 +8,7 @@ from astropy.wcs import WCS
 
 o = optparse.OptionParser(usage='%prog [options] *.fits')
 o.add_option('--size', dest='size', nargs=2, default=(8, 6), type="float", help='size of the output image (default: 8 6)')
+o.add_option('--ra_format', dest='ra_format', default='hh:mm:ss', type="str", help='major formatter of the RA axis (default: hh:mm:ss)')
 o.add_option('--vmin', dest='vmin', default=None, type="float", help='minimum value of the colormap (default: data minimum)')
 o.add_option('--vmax', dest='vmax', default=None, type="float", help='maximum value of the colormap (default: data maximum)')
 o.add_option('--cmap', dest='cmap', default="jet", type="str", help='colormap (default: jet)')
@@ -31,6 +32,8 @@ fig = plt.figure(figsize=opts.size)
 ax = fig.add_subplot(1,1,1, projection=wcs)
 ra = ax.coords[0]
 dec = ax.coords[1]
+if hdr['CUNIT1'] == 'deg': 
+	ra = ra.set_major_formatter(opts.ra_format)
 
 if opts.vmin == None: opts.vmin = np.min(data)
 if opts.vmax == None: opts.vmax = np.max(data)
