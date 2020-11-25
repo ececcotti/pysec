@@ -4,10 +4,12 @@ import os,sys
 import re
 import matplotlib.pyplot as plt
 from astropy.io import fits
+from astropy.nddata import Cutout2D
 from astropy.wcs import WCS
 
 o = optparse.OptionParser(usage='%prog [options] *.fits')
 o.add_option('--size', dest='size', nargs=2, default=(8, 6), type="float", help='size of the output image (default: 8 6)')
+o.add_option('--zoom', dest='zoom', default=1, type="float", help='zoom factor of the image  (default: 1, i.e. original image)')
 o.add_option('--ra_format', dest='ra_format', default='hh:mm:ss', type="str", help='major formatter of the RA axis (default: hh:mm:ss)')
 o.add_option('--vmin', dest='vmin', default=None, type="float", help='minimum value of the colormap (default: data minimum)')
 o.add_option('--vmax', dest='vmax', default=None, type="float", help='maximum value of the colormap (default: data maximum)')
@@ -27,6 +29,7 @@ hdul = fits.open(fitsname)
 hdr = hdul[0].header
 data = hdul[0].data[0,0,:,:]
 wcs = WCS(hdr,naxis=2)
+hdul.close()
 
 fig = plt.figure(figsize=opts.size)
 ax = fig.add_subplot(1,1,1, projection=wcs)
@@ -38,6 +41,12 @@ if hdr['CUNIT1'] == 'deg':
 if opts.vmin == None: opts.vmin = np.min(data)
 if opts.vmax == None: opts.vmax = np.max(data)
 if opts.cbar_label == None: opts.cbar_label = hdr['BUNIT']
+
+if opts.zoom != 1:
+	image_center = [data.shape[0]//2, data.shape[1]//2]
+	zoom_size = [data.shape[0]//opts.zoom, data.shape[1]//opts.zoom]
+	zoomed_image = Cutout2D(data, image_center, zoom_size, wcs=wcs)
+	data = zoomed_image.data
 
 plt.imshow(data, origin='lower', cmap=opts.cmap,
 	aspect='auto', interpolation='none', 
