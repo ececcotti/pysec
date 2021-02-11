@@ -32,8 +32,7 @@ data = hdul[0].data[0,0,:,:]
 wcs = WCS(hdr,naxis=2)
 hdul.close()
 
-if opts.rms:
-	print('rms =', np.std(data), hdr['BUNIT'])
+if opts.rms: print('rms =', np.std(data), hdr['BUNIT'])
 
 fig = plt.figure(figsize=opts.size)
 ax = fig.add_subplot(1,1,1, projection=wcs)
