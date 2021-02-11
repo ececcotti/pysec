@@ -17,6 +17,7 @@ o.add_option('--cmap', dest='cmap', default="jet", type="str", help='colormap (d
 o.add_option('--cbar_label', dest='cbar_label', default=None, type="str", help='label of the color bar (default: BUNIT from header)')
 o.add_option('--gridc', dest='gridc', default="silver", type="str", help='coordinates grid color (default: silver)')
 o.add_option('--title', dest='title', default=None, type="str", help='title of the image (default: fits name)')
+o.add_option('--rms', dest='rms', default=False, action='store_true', help='estimates the rms as std of the image (NB: the image should be the residual)')
 g = optparse.OptionGroup(o, 'Saving Options')
 g.add_option('--pdf', dest='save_pdf', default=False, action='store_true', help='save image as pdf')
 g.add_option('--png', dest='save_png', default=False, action='store_true', help='save image as png')
@@ -30,6 +31,9 @@ hdr = hdul[0].header
 data = hdul[0].data[0,0,:,:]
 wcs = WCS(hdr,naxis=2)
 hdul.close()
+
+if opts.rms:
+	print('rms =', np.std(data), hdr['BUNIT'])
 
 fig = plt.figure(figsize=opts.size)
 ax = fig.add_subplot(1,1,1, projection=wcs)
@@ -66,4 +70,5 @@ if opts.save_png:
 	plt.savefig(opts.outfile + '.png', dpi=200)
 plt.show()
 plt.close()
+
 
