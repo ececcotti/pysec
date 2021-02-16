@@ -11,6 +11,7 @@ o = optparse.OptionParser(usage='%prog [options] *.fits')
 o.add_option('--size', dest='size', nargs=2, default=(8, 6), type="float", help='size of the output image (default: 8 6)')
 o.add_option('--zoom', dest='zoom', default=1, type="float", help='zoom factor of the image  (default: 1, i.e. original image)')
 o.add_option('--ra_format', dest='ra_format', default='hh:mm:ss', type="str", help='major formatter of the RA axis (default: hh:mm:ss)')
+o.add_option('--scalef', dest='scalef', default=1, type="float", help='scale factor multiplied to data (default: 1) NB: maybe you have to modify --cbar_label')
 o.add_option('--vmin', dest='vmin', default=None, type="float", help='minimum value of the colormap (default: data minimum)')
 o.add_option('--vmax', dest='vmax', default=None, type="float", help='maximum value of the colormap (default: data maximum)')
 o.add_option('--cmap', dest='cmap', default="jet", type="str", help='colormap (default: jet)')
@@ -28,12 +29,11 @@ opts,args = o.parse_args(sys.argv[1:])
 fitsname = args[0]
 hdul = fits.open(fitsname)
 hdr = hdul[0].header
-data = hdul[0].data[0,0,:,:]
+data = hdul[0].data[0,0,:,:] * opts.scalef
 wcs = WCS(hdr,naxis=2)
 hdul.close()
 
-if opts.rms:
-	print('rms =', np.std(data), hdr['BUNIT'])
+if opts.rms: print('rms =', np.std(data), hdr['BUNIT'])
 
 fig = plt.figure(figsize=opts.size)
 ax = fig.add_subplot(1,1,1, projection=wcs)
