@@ -9,6 +9,7 @@ git clone https://github.com/ececcotti/astro-pysEC
 ```
 The following Python packages are required to run all the scripts:
 -  [Astropy](https://docs.astropy.org/en/stable/index.html) 4.1 or later
+-  [h5py](https://www.h5py.org/) 3.2 or later
 -  [Matplotlib](https://matplotlib.org/) 2.0 or later
 -  [NumPy](https://numpy.org/) 1.16 or later
 -  [pandas](https://pandas.pydata.org/pandas-docs/stable/index.html) 1.1.4 or later
@@ -17,12 +18,14 @@ The following Python packages are required to run all the scripts:
 
 These can be installed on Ubuntu with
 ```
-pip install astropy matplotlib numpy python-casacore pandas regions
+pip install astropy h5py matplotlib numpy python-casacore pandas regions
 ```
 If you do not need all the scripts, you can check what are the required packages in each one. The scripts are developed using Python 3.8, but some of them might also work with Python 2.7 &ndash; verify by checking the scripts description.
 
 ## Scripts description
 -  `flagManager.py`: it saves or replaces the FLAG column in Measurement Set files using a numpy array (Python 2.7 or later).
+
+-  `h5sol_utils.py`: a set of tools to manage and plot HDF5 files containing LOFAR calibration solutions; currently, it is __draft version__ to plot the amplitude of complex gains as a function of the baseline length (Python 3.8 or later).
 
 -  `plot_fits.py`: it generates plots of a FITS image using WCS coordinates. The output image can be saved in PDF or PNG format. Other plotting options can be listed with `python plot_fits.py -h` (Python 3.8 or later).
 
