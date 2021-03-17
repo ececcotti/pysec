@@ -4,7 +4,7 @@ import numpy as np
 import h5py
 import matplotlib.pyplot as plt
 
-def freq_unit(fu='MHz'):
+def freqUnit(fu='MHz'):
     fu = fu.lower()
     if fu=='ghz': return 1.e9
     elif fu=='mhz': return 1.e6
@@ -12,6 +12,15 @@ def freq_unit(fu='MHz'):
     elif fu=='hz': return 1.
     else: raise ValueError("Invalid frequency unit (only GHz, MHz, kHz, Hz accepted)")
 
+def ant2coord(ants):
+    ant_coord = []
+    for i in range(ants.shape[0]):
+        ant_coord.append(ants[i][1])
+
+    ant_coord = np.array(ant_coord)
+    ant_coord -= ant_coord[0]
+
+    return ant_coord
 
 def antennaGains(amp, phase, avg_time=False, avg_frequency=False, avg_antenna=False, avg_polarization=False):
 
@@ -19,18 +28,61 @@ def antennaGains(amp, phase, avg_time=False, avg_frequency=False, avg_antenna=Fa
 
     if np.any(avg) == False:
         return amp[:] * np.exp(1j * phase[:])
-
     else: 
         wTrue = tuple(np.where(avg==True)[0])
         #return np.nanmean(amp, axis=wTrue) * np.exp(1j * np.nanmean(phase, axis=wTrue))
         return np.nanmean(amp[:] * np.exp(1j * phase[:]), axis=wTrue)
+
+def baselineGains(ant_gains, ant_coord, ant_axis, avg_time=False, avg_frequency=False, avg_antenna=False, avg_polarization=False, nolofar=False):
+
+    nant = ant_coord.shape[0]
+
+    bll = np.zeros(int(nant*(nant-1)/2), dtype=np.float64)
+    #blgain = np.zeros((int(nant*(nant-1)/2), npol), dtype=np.complex128)
+
+    avg = np.array([avg_time, avg_frequency, avg_antenna, avg_polarization])
+
+    ant_count = 0
+    bl_count = 0
+    for i in range(nant):
+        for j in range(ant_count,nant):
+            if i != j: 
+                bll[bl_count] = np.sqrt(np.sum(np.square(ant_coord[i] - ant_coord[j]))) 
+                if np.any(avg) == False:
+                    blgain.append(again[i,:] * np.conj(again[j,:])
+                bl_count += 1
+        ant_count +=1
+#    w_cc = []; w_cr = []; w_rr = []
+#    acount = 0
+#    bcount = 0
+#    for i in range(nant):
+#        for j in range(acount,nant):
+#            if i != j: 
+#                bll[bcount] = np.sqrt(np.sum(np.square(ants_coord[i] - ants_coord[j]))) 
+#                #blgain[bcount, :] = again[i,:] * np.conj(again[j,:])
+#                blgain[bcount, :] = np.nanmean(again[:,:,i,:] * np.conj(again[:,:,j,:]), axis=(0,1))
+
+#                # index of CS-CS, RS-RS, CS-RS baselines
+#                st1 = ants[i][0].decode('utf-8')[0]
+#                st2 = ants[j][0].decode('utf-8')[0]
+#                if st1 == 'C' and st2 == 'C': w_cc.append(bcount)
+#                elif st1 == 'R' and st2 == 'R': w_rr.append(bcount)
+#                else: w_cr.append(bcount)
+
+#                bcount += 1
+#        acount += 1
+
+    w_cc = np.asarray(w_cc)
+    w_rr = np.asarray(w_rr)
+    w_cr = np.asarray(w_cr)
+
 
 if __name__=="__main__":
 
     o = optparse.OptionParser(usage='%prog [options] *.h5')
     o.add_option('--nsol', nargs=2, dest='nsol', default=('000','000'), type="str", help='Numbers of solution set and subtable (default: 000 000)')
     o.add_option('--frqu', dest='frqu', default='MHz', type="str", help='Frequency unit for plot (default: MHz)')
-
+    o.add_option('--nolofar', dest='nolofar', default=True, action='store_false', help='Disable functionalities which work only with LOFAR data')
 
     opts,args = o.parse_args(sys.argv[1:])
 
@@ -40,7 +92,7 @@ if __name__=="__main__":
     amp = sols['amplitude' + opts.nsol[1]]['val']
     phase = sols['phase' + opts.nsol[1]]['val']
 
-    frqu = freq_unit(opts.frqu)
+    frqu = freqUnit(opts.frqu)
 
     frq_range = [np.min(sols['amplitude' + opts.nsol[1]]['freq'])/frqu, np.max(sols['amplitude' + opts.nsol[1]]['freq'])/frqu]
     nt = amp.shape[0]
@@ -48,9 +100,10 @@ if __name__=="__main__":
     nant = amp.shape[2]
     npol = amp.shape[3]
 
-    again = antennaGains(amp,phase, avg_time=True, avg_frequency=True)
-    print (again.shape)
+    ant_gains = antennaGains(amp,phase)
+    ant_coord = ant2coord(sols['antenna'])
 
+    """
     ants = sols['antenna']
     ants_coord = []
     for i in range(ants.shape[0]):
@@ -69,7 +122,8 @@ if __name__=="__main__":
         for j in range(acount,nant):
             if i != j: 
                 bll[bcount] = np.sqrt(np.sum(np.square(ants_coord[i] - ants_coord[j]))) 
-                blgain[bcount, :] = again[i,:] * np.conj(again[j,:])
+                #blgain[bcount, :] = again[i,:] * np.conj(again[j,:])
+                blgain[bcount, :] = np.nanmean(again[:,:,i,:] * np.conj(again[:,:,j,:]), axis=(0,1))
 
                 # index of CS-CS, RS-RS, CS-RS baselines
                 st1 = ants[i][0].decode('utf-8')[0]
@@ -84,7 +138,7 @@ if __name__=="__main__":
     w_cc = np.asarray(w_cc)
     w_rr = np.asarray(w_rr)
     w_cr = np.asarray(w_cr)
-
+    
     fitdeg = 4
     fitp = np.polynomial.polynomial.Polynomial.fit(x=bll, y=np.abs(blgain[:,0]), deg=fitdeg)
     xfit = np.arange(np.min(bll), np.max(bll), np.max(bll)/100)
@@ -99,7 +153,9 @@ if __name__=="__main__":
     plt.xlabel('Baseline length (m)')
     plt.ylabel('Gain amplitude')
     plt.title('solutions at %.1f-%.1f MHz' % (frq_range[0], frq_range[1]))
+    plt.grid(color='silver')
     plt.legend()
     plt.tight_layout()
-    plt.savefig('bslgainss_%i-%iMHz.pdf'%(frq_range[0], frq_range[1]))
+    plt.savefig('bslgainsss_%i-%iMHz.pdf'%(frq_range[0], frq_range[1]))
     plt.close()
+    """
