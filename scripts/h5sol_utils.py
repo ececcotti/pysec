@@ -3,6 +3,7 @@ import os,sys
 import numpy as np 
 import h5py
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 
 def freqUnit(fu='MHz'):
     fu = fu.lower()
@@ -106,18 +107,18 @@ if __name__=="__main__":
     nt, nf, nant, npol = [amp.shape[i] for i in range(amp.ndim)]
 
     # antenna gains
-    ant_gains, ant_axis = antennaGains(amp, phase, avg_time=opts.ag_avg[0], avg_frequency=opts.ag_avg[1], avg_polarization=opts.ag_avg[2])
-    ant_coord = ant2coord(sols['antenna'])
+    #ant_gains, ant_axis = antennaGains(amp, phase, avg_time=opts.ag_avg[0], avg_frequency=opts.ag_avg[1], avg_polarization=opts.ag_avg[2])
+    #ant_coord = ant2coord(sols['antenna'])
     
     # baseline gains
-    bll, bl_gains, w = baselineGains(ant_gains, ant_coord, ant_axis=ant_axis, ants=sols['antenna'])
+    #bll, bl_gains, w = baselineGains(ant_gains, ant_coord, ant_axis=ant_axis, ants=sols['antenna'])
 
     """
     fitdeg = 4
     fitp = np.polynomial.polynomial.Polynomial.fit(x=bll, y=np.abs(blgain[:,0]), deg=fitdeg)
     xfit = np.arange(np.min(bll), np.max(bll), np.max(bll)/100)
 
-    """
+    
     plt.figure(figsize=(8,5))
     plt.plot(bll[w[0]], np.abs(bl_gains[w[0],0]), '.', mew=0, label='CS-CS baseline', alpha=0.75)
     plt.plot(bll[w[1]], np.abs(bl_gains[w[1],0]), '.', mew=0, label='RS-RS baseline', alpha=0.75)
@@ -133,4 +134,32 @@ if __name__=="__main__":
     plt.show()
     #plt.savefig('bslgainsss_%i-%iMHz.pdf'%(frq_range[0], frq_range[1]))
     plt.close()
-    
+    """
+
+    clock = sols['clock' + opts.nsol[1]]['val'][:,:,0]
+    time = (sols['amplitude' + opts.nsol[1]]['time'][:]-sols['amplitude' + opts.nsol[1]]['time'][0])/3600.
+    for i in range(clock.shape[1]):
+        wr = sols['antenna'][i][0].decode('utf-8')[0]
+        if wr == 'R': 
+            firstR = i
+            break
+
+    nRstation = len(clock[0,firstR:-1])
+    data = range(0, nRstation+1)
+    norm = mpl.colors.Normalize(vmin=min(data), vmax=max(data), clip=True)
+    mapper = mpl.cm.ScalarMappable(norm=norm, cmap=mpl.cm.jet_r)
+    node_color = [(r, g, b) for r, g, b, a in mapper.to_rgba(data)]
+
+    plt.figure(figsize=(10,5))
+    count = 0
+    for i in range(clock.shape[1]):
+        wr = sols['antenna'][i][0].decode('utf-8')[0]
+        if wr == 'R':
+            plt.plot(time, clock[:,i]*1.e9, '-', color=node_color[count], lw=1)
+            count += 1
+
+    plt.xlabel('Time (h)')
+    plt.ylabel('Clock (ns)')
+    plt.title('clock delay at %.1f-%.1f MHz' % (frq_range[0], frq_range[1]))
+    plt.savefig('clock_%i-%iMHz.pdf'%(frq_range[0], frq_range[1]))
+    plt.close()
