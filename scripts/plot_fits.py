@@ -10,7 +10,7 @@ from astropy.wcs import WCS
 o = optparse.OptionParser(usage='%prog [options] *.fits')
 o.add_option('--size', dest='size', nargs=2, default=(8, 6), type="float", help='size of the output image (default: 8 6)')
 o.add_option('--zoom', dest='zoom', default=1, type="float", help='zoom factor of the image  (default: 1, i.e. original image)')
-o.add_option('--zoom_where', nargs=2, default=(None,None), dest='zoom_where', type="float", help='central RA and Dec coordinates (in deg) of the zoomed frame (default: image center)')
+o.add_option('--zoom_where', nargs=2, default=(None,None), dest='zoom_where', type="float", help='central RA and Dec coordinates (in deg) of the zoomed frame (default: image center) NB: it requires --zoom > 1')
 o.add_option('--ra_format', dest='ra_format', default='hh:mm:ss', type="str", help='major formatter of the RA axis (default: hh:mm:ss)')
 o.add_option('--scalef', dest='scalef', default=1, type="float", help='scale factor multiplied to data (default: 1) NB: maybe you have to modify --cbar_label')
 o.add_option('--vmin', dest='vmin', default=None, type="float", help='minimum value of the colormap (default: data minimum)')
@@ -47,6 +47,8 @@ if opts.vmin == None: opts.vmin = np.min(data)
 if opts.vmax == None: opts.vmax = np.max(data)
 if opts.cbar_label == None: opts.cbar_label = hdr['BUNIT']
 
+
+
 if opts.zoom != 1:
 	if opts.zoom_where != (None, None):
 		image_center = wcs.wcs_world2pix(opts.zoom_where[0], opts.zoom_where[1], 1)		
@@ -55,6 +57,9 @@ if opts.zoom != 1:
 	zoom_size = [data.shape[0]//opts.zoom, data.shape[1]//opts.zoom]
 	zoomed_image = Cutout2D(data, image_center, zoom_size, wcs=wcs)
 	data = zoomed_image.data
+else: 
+	if opts.zoom_where != (None, None):
+		raise Exception("no zoom applied (you must use '--zoom' with a zoom factor > 1 to change the frame center)")
 
 plt.imshow(data, origin='lower', cmap=opts.cmap,
 	aspect='auto', interpolation='none', 
